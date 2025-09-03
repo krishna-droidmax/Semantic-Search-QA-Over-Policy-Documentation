@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF RAG System - Netlify</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background-color: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background-color: #f0f2ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .query-section {
+            margin-top: 20px;
+        }
+
+        .query-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease;
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 20%;
+        }
+
+        .bot-message {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            margin-right: 20%;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sources {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .sources h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .source-item {
+            margin-bottom: 5px;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+            border-left: 3px solid #667eea;
+        }
+
+        .metadata {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .netlify-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .user-message, .bot-message {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 PDF RAG System</h1>
+            <p>Upload a PDF and ask questions about its content using AI</p>
+        </div>
+
+        <div class="netlify-notice">
+            <strong>🚀 Netlify Version:</strong> This is a demo version running on Netlify. 
+            For full functionality, deploy the Node.js version to a platform like Vercel, Railway, or Heroku.
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>📄 Upload PDF</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop your PDF here or click to browse</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                </div>
+                <button class="btn" id="uploadBtn" disabled>Upload PDF</button>
+                <div id="uploadStatus"></div>
+            </div>
+
+            <div class="card">
+                <h2>❓ Ask Questions</h2>
+                <div class="query-section">
+                    <input type="text" id="queryInput" class="query-input" placeholder="Ask a question about your PDF..." disabled>
+                    <button class="btn" id="queryBtn" disabled>Ask Question</button>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your question...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <h2>💬 Chat</h2>
+            <div id="chatMessages">
+                <div class="message bot-message">
+                    <p>👋 Welcome! This is the Netlify demo version. Upload a PDF file and start asking questions about its content.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const queryInput = document.getElementById('queryInput');
+        const queryBtn = document.getElementById('queryBtn');
+        const loading = document.getElementById('loading');
+        const chatMessages = document.getElementById('chatMessages');
+
+        let uploadedFile = null;
+
+        // Upload area interactions
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Upload button
+        uploadBtn.addEventListener('click', uploadFile);
+
+        // Query button
+        queryBtn.addEventListener('click', askQuestion);
+        queryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') askQuestion();
+        });
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                showStatus('Please select a PDF file.', 'error');
+                return;
+            }
+
+            uploadedFile = file;
+            uploadBtn.disabled = false;
+            showStatus(`Selected: ${file.name}`, 'success');
+        }
+
+        async function uploadFile() {
+            if (!uploadedFile) return;
+
+            const formData = new FormData();
+            formData.append('pdf', uploadedFile);
+
+            try {
+                uploadBtn.disabled = true;
+                showStatus('Uploading PDF...', 'info');
+
+                const response = await fetch('/.netlify/functions/upload-pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showStatus('PDF uploaded and processed successfully!', 'success');
+                    queryInput.disabled = false;
+                    queryBtn.disabled = false;
+                    addMessage('PDF uploaded successfully! You can now ask questions about the document.', 'bot');
+                } else {
+                    showStatus(`Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Upload failed: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+
+        async function askQuestion() {
+            const question = queryInput.value.trim();
+            if (!question) return;
+
+            addMessage(question, 'user');
+            queryInput.value = '';
+            queryBtn.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch('/.netlify/functions/query-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: question })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    addMessage(result.answer, 'bot', result.sources, result.metadata);
+                } else {
+                    addMessage(`Error: ${result.error}`, 'bot');
+                }
+            } catch (error) {
+                addMessage(`Query error: ${error.message}`, 'bot');
+            } finally {
+                queryBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function addMessage(text, type, sources = null, metadata = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+
+            let messageContent = `<p>${formatAnswer(text)}</p>`;
+            
+            if (sources && sources.length > 0) {
+                messageContent += '<div class="sources">';
+                messageContent += '<h4>📚 Sources:</h4>';
+                sources.forEach((source, index) => {
+                    messageContent += `<div class="source-item">`;
+                    messageContent += `<strong>Source ${index + 1}:</strong> Page ${source.metadata?.pageNumber || 'N/A'} (Relevance: ${(source.similarity * 100).toFixed(1)}%)<br>`;
+                    messageContent += `<em>${source.content || 'No preview available'}</em>`;
+                    messageContent += `</div>`;
+                });
+                messageContent += '</div>';
+            }
+
+            if (metadata) {
+                messageContent += '<div class="metadata">';
+                messageContent += `Total chunks: ${metadata.totalChunks || 'N/A'} | Relevant chunks: ${metadata.relevantChunks || 'N/A'}`;
+                messageContent += '</div>';
+            }
+
+            messageDiv.innerHTML = messageContent;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatAnswer(text) {
+            // Basic markdown-like formatting
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function showStatus(message, type) {
+            uploadStatus.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

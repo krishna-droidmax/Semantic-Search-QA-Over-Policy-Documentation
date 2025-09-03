@@ -1,0 +1,27 @@
+{
+  "name": "pdf-rag-system",
+  "version": "1.0.0",
+  "description": "PDF RAG System with Sentence Transformers and FAISS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "pdf-parse": "^1.1.1",
+    "@xenova/transformers": "^2.6.2",
+    "faiss-node": "^0.4.1",
+    "node-fetch": "^2.7.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["pdf", "rag", "semantic-search", "embeddings", "faiss"],
+  "author": "Krishna-droidmax",
+  "license": "MIT"
+}
+
